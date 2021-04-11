@@ -1,0 +1,25 @@
+{
+    "name": "eriocnemis/module-region-api",
+    "description": "The module serves as application program interface (API) responsible for functionality of regions manage as well as bulk operations.",
+    "type": "magento2-module",
+    "version": "2.3.1",
+    "authors": [{
+        "name": "Eriocnemis Team",
+        "email": "dev.eriocnemis@gmail.com"
+    }],
+    "license": [
+        "OSL-3.0"
+    ],
+    "require": {
+        "magento/framework": "102.0.*",
+        "magento/module-webapi": "100.3.*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Eriocnemis\\RegionApi\\": ""
+        }
+    }
+}

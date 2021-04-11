@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Eriocnemis, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <!-- Region Api -->
+    <route url="/V1/eriocnemis_region/search" method="GET">
+        <service class="Eriocnemis\RegionApi\Api\GetRegionListInterface" method="execute"/>
+        <resources>
+            <resource ref="Eriocnemis_Region::region"/>
+        </resources>
+    </route>
+    <route url="/V1/eriocnemis_region/:regionId" method="GET">
+        <service class="Eriocnemis\RegionApi\Api\GetRegionByIdInterface" method="execute"/>
+        <resources>
+            <resource ref="Eriocnemis_Region::region"/>
+        </resources>
+    </route>
+    <route url="/V1/eriocnemis_region" method="POST">
+        <service class="Eriocnemis\RegionApi\Api\SaveRegionInterface" method="execute"/>
+        <resources>
+            <resource ref="Eriocnemis_Region::region_edit"/>
+        </resources>
+    </route>
+    <route url="/V1/eriocnemis_region/:regionId" method="PUT">
+        <service class="Eriocnemis\RegionApi\Api\SaveRegionInterface" method="execute"/>
+        <resources>
+            <resource ref="Eriocnemis_Region::region_edit"/>
+        </resources>
+    </route>
+    <route url="/V1/eriocnemis_region/validate" method="POST">
+        <service class="Eriocnemis\RegionApi\Api\ValidateRegionInterface" method="execute"/>
+        <resources>
+            <resource ref="Eriocnemis_Region::region_edit"/>
+        </resources>
+    </route>
+    <route url="/V1/eriocnemis_region/:regionId" method="DELETE">
+        <service class="Eriocnemis\RegionApi\Api\DeleteRegionByIdInterface" method="execute"/>
+        <resources>
+            <resource ref="Eriocnemis_Region::region_delete"/>
+        </resources>
+    </route>
+</routes>
