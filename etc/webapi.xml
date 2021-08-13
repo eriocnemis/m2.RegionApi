@@ -8,38 +8,38 @@
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
     <!-- Region Api -->
-    <route url="/V1/eriocnemis_region/search" method="GET">
-        <service class="Eriocnemis\RegionApi\Api\GetRegionListInterface" method="execute"/>
+    <route url="/V1/eriocnemis_region/:regionId" method="GET">
+        <service class="Eriocnemis\RegionApi\Api\RegionRepositoryInterface" method="get"/>
         <resources>
             <resource ref="Eriocnemis_Region::region"/>
         </resources>
     </route>
-    <route url="/V1/eriocnemis_region/:regionId" method="GET">
-        <service class="Eriocnemis\RegionApi\Api\GetRegionByIdInterface" method="execute"/>
+    <route url="/V1/eriocnemis_region/search" method="GET">
+        <service class="Eriocnemis\RegionApi\Api\RegionRepositoryInterface" method="getList"/>
         <resources>
             <resource ref="Eriocnemis_Region::region"/>
         </resources>
     </route>
     <route url="/V1/eriocnemis_region" method="POST">
-        <service class="Eriocnemis\RegionApi\Api\SaveRegionInterface" method="execute"/>
+        <service class="Eriocnemis\RegionApi\Api\RegionRepositoryInterface" method="save"/>
         <resources>
             <resource ref="Eriocnemis_Region::region_edit"/>
         </resources>
     </route>
     <route url="/V1/eriocnemis_region/:regionId" method="PUT">
-        <service class="Eriocnemis\RegionApi\Api\SaveRegionInterface" method="execute"/>
+        <service class="Eriocnemis\RegionApi\Api\RegionRepositoryInterface" method="save"/>
         <resources>
             <resource ref="Eriocnemis_Region::region_edit"/>
         </resources>
     </route>
     <route url="/V1/eriocnemis_region/validate" method="POST">
-        <service class="Eriocnemis\RegionApi\Api\ValidateRegionInterface" method="execute"/>
+        <service class="Eriocnemis\RegionApi\Api\RegionRepositoryInterface" method="validate"/>
         <resources>
             <resource ref="Eriocnemis_Region::region_edit"/>
         </resources>
     </route>
     <route url="/V1/eriocnemis_region/:regionId" method="DELETE">
-        <service class="Eriocnemis\RegionApi\Api\DeleteRegionByIdInterface" method="execute"/>
+        <service class="Eriocnemis\RegionApi\Api\RegionRepositoryInterface" method="delete"/>
         <resources>
             <resource ref="Eriocnemis_Region::region_delete"/>
         </resources>
