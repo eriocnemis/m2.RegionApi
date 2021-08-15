@@ -139,7 +139,7 @@ interface RegionInterface extends ExtensibleDataInterface
     /**
      * Retrieve existing extension attributes object or create a new one
      *
-     * @return \Eriocnemis\RegionApi\Api\Data\RegionExtensionInterface
+     * @return \Eriocnemis\RegionApi\Api\Data\RegionExtensionInterface|null
      */
     public function getExtensionAttributes();
 
