@@ -62,7 +62,11 @@ class ValidateTest extends WebapiAbstract
         $serviceInfo = $this->getServiceInfo();
         $requestData = ['region' => $this->getFixtureData()];
 
+        $result = false;
         $response = $this->_webApiCall($serviceInfo, $requestData);
+        if (is_bool($response)) {
+            $result = (bool)$response;
+        }
         $this->assertTrue($response);
     }
 

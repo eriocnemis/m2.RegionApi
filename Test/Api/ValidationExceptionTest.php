@@ -129,7 +129,7 @@ class ValidationExceptionTest extends WebapiAbstract
     /**
      * Assert soap exception
      *
-     * @param \Exception $e
+     * @param \SoapFault $e
      * @return void
      */
     private function assertSoapException($e)

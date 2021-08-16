@@ -41,7 +41,7 @@ class GetListTest extends WebapiAbstract
     private const SERVICE_OPERATION = 'getList';
 
     /**
-     * @var RegionInterface
+     * @var RegionInterface|null
      */
     private $region;
 

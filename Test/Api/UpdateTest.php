@@ -42,7 +42,7 @@ class UpdateTest extends WebapiAbstract
     private const SERVICE_OPERATION = 'save';
 
     /**
-     * @var RegionInterface
+     * @var RegionInterface|null
      */
     private $region;
 

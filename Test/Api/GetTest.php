@@ -42,7 +42,7 @@ class GetTest extends WebapiAbstract
     private const SERVICE_OPERATION = 'get';
 
     /**
-     * @var RegionInterface
+     * @var RegionInterface|null
      */
     private $region;
 

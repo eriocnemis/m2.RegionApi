@@ -41,7 +41,7 @@ class DeleteTest extends WebapiAbstract
     private const SERVICE_OPERATION = 'delete';
 
     /**
-     * @var RegionInterface
+     * @var RegionInterface|null
      */
     private $region;
 

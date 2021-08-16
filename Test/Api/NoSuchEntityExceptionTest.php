@@ -109,7 +109,7 @@ class NoSuchEntityExceptionTest extends WebapiAbstract
      * Assert soap exception
      *
      * @param int $regionId
-     * @param \Exception $e
+     * @param \SoapFault $e
      * @return void
      */
     private function assertSoapException($regionId, $e)
