@@ -105,8 +105,8 @@ class GetTest extends WebapiAbstract
      */
     protected function tearDown()
     {
-        if ($this->region) {
-            $this->regionRepository->delete($this->region->getId());
+        if (null !== $this->region) {
+            $this->regionRepository->delete((int)$this->region->getId());
             $this->region = null;
         }
     }
@@ -120,16 +120,18 @@ class GetTest extends WebapiAbstract
     {
         $this->createTempData();
 
-        $fixtureData = $this->dataObjectProcessor->buildOutputDataArray(
-            $this->region,
-            RegionInterface::class
-        );
+        if (null !== $this->region) {
+            $fixtureData = $this->dataObjectProcessor->buildOutputDataArray(
+                $this->region,
+                RegionInterface::class
+            );
 
-        $serviceInfo = $this->getServiceInfo($this->region->getId());
-        $requestData = ['regionId' => $this->region->getId()];
-        $regionData = $this->_webApiCall($serviceInfo, $requestData);
+            $serviceInfo = $this->getServiceInfo((int)$this->region->getId());
+            $requestData = ['regionId' => $this->region->getId()];
+            $response = $this->_webApiCall($serviceInfo, $requestData);
 
-        $this->assertEquals($fixtureData, $regionData, 'Region data is invalid.');
+            $this->assertEquals($fixtureData, $response, 'Region data is invalid.');
+        }
     }
 
     /**
@@ -163,6 +165,8 @@ class GetTest extends WebapiAbstract
         $region = $this->regionFactory->create();
         $this->dataObjectHelper->populateWithArray($region, $this->getFixtureData(), RegionInterface::class);
         $this->region = $this->regionRepository->save($region);
+
+        $this->assertInstanceOf(RegionInterface::class, $this->region);
     }
 
     /**

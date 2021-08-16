@@ -71,11 +71,11 @@ class ValidationExceptionTest extends WebapiAbstract
         try {
             $this->_webApiCall($serviceInfo, $requestData);
             $this->fail('Expected throwing exception');
+        } catch (\SoapFault $e) {
+            $this->assertSoapException($e);
         } catch (\Exception $e) {
             if (constant('TESTS_WEB_API_ADAPTER') === self::ADAPTER_REST) {
                 $this->assertRestException($e);
-            } elseif (constant('TESTS_WEB_API_ADAPTER') === self::ADAPTER_SOAP) {
-                $this->assertSoapException($e);
             } else {
                 throw $e;
             }

@@ -122,8 +122,8 @@ class UpdateTest extends WebapiAbstract
      */
     protected function tearDown()
     {
-        if ($this->region) {
-            $this->regionRepository->delete($this->region->getId());
+        if (null !== $this->region) {
+            $this->regionRepository->delete((int)$this->region->getId());
             $this->region = null;
         }
     }
@@ -137,28 +137,30 @@ class UpdateTest extends WebapiAbstract
     {
         $this->createTempData();
 
-        $fixtureData = $this->getNewFixtureData() + $this->dataObjectProcessor->buildOutputDataArray(
-            $this->region,
-            RegionInterface::class
-        );
+        if (null !== $this->region) {
+            $fixtureData = $this->getNewFixtureData() + $this->dataObjectProcessor->buildOutputDataArray(
+                $this->region,
+                RegionInterface::class
+            );
 
-        $serviceInfo = $this->getServiceInfo($this->region->getId());
-        $requestData = ['region' => $this->getNewFixtureData()];
+            $serviceInfo = $this->getServiceInfo((int)$this->region->getId());
+            $requestData = ['region' => $this->getNewFixtureData()];
 
-        $regionData = $this->_webApiCall($serviceInfo, $requestData);
-        $this->assertNotNull($regionData['id']);
+            $regionId = null;
+            $response = $this->_webApiCall($serviceInfo, $requestData);
+            if (is_array($response) && !empty($response['id'])) {
+                $regionId = $response['id'];
+            }
+            $this->assertNotNull($regionId);
 
-        $this->region = $this->regionRepository->get($regionData['id']);
-        $regionData = $this->dataObjectProcessor->buildOutputDataArray(
-            $this->region,
-            RegionInterface::class
-        );
+            $this->region = $this->regionRepository->get($regionId);
+            $regionData = $this->dataObjectProcessor->buildOutputDataArray(
+                $this->region,
+                RegionInterface::class
+            );
 
-        $this->assertEquals(
-            $fixtureData,
-            $regionData,
-            'Region data is invalid.'
-        );
+            $this->assertEquals($fixtureData, $regionData, 'Region data is invalid.');
+        }
     }
 
     /**
@@ -192,6 +194,8 @@ class UpdateTest extends WebapiAbstract
         $region = $this->regionFactory->create();
         $this->dataObjectHelper->populateWithArray($region, $this->getFixtureData(), RegionInterface::class);
         $this->region = $this->regionRepository->save($region);
+
+        $this->assertInstanceOf(RegionInterface::class, $this->region);
     }
 
     /**

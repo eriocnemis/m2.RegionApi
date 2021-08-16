@@ -67,7 +67,7 @@ class ValidateTest extends WebapiAbstract
         if (is_bool($response)) {
             $result = (bool)$response;
         }
-        $this->assertTrue($response);
+        $this->assertTrue($result);
     }
 
     /**

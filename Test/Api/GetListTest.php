@@ -98,8 +98,8 @@ class GetListTest extends WebapiAbstract
      */
     protected function tearDown()
     {
-        if ($this->region) {
-            $this->regionRepository->delete($this->region->getId());
+        if (null !== $this->region) {
+            $this->regionRepository->delete((int)$this->region->getId());
             $this->region = null;
         }
     }
@@ -113,20 +113,24 @@ class GetListTest extends WebapiAbstract
     {
         $this->createTempData();
 
-        $searchCriteria = $this->getSearchCriteria();
-        $serviceInfo = $this->getServiceInfo($searchCriteria);
-        $response = $this->_webApiCall($serviceInfo, $searchCriteria);
+        if (null !== $this->region) {
+            $searchCriteria = $this->getSearchCriteria();
+            $serviceInfo = $this->getServiceInfo($searchCriteria);
 
-        $this->assertArrayHasKey('search_criteria', $response);
-        $this->assertArrayHasKey('total_count', $response);
-        $this->assertArrayHasKey('items', $response);
+            $response = $this->_webApiCall($serviceInfo, $searchCriteria);
+            if (is_array($response)) {
+                $this->assertArrayHasKey('search_criteria', $response);
+                $this->assertArrayHasKey('total_count', $response);
+                $this->assertArrayHasKey('items', $response);
 
-        $this->assertEquals($searchCriteria['searchCriteria'], $response['search_criteria']);
-        $this->assertTrue($response['total_count'] == 1);
-        $this->assertTrue(count($response['items']) == 1);
+                $this->assertEquals($searchCriteria['searchCriteria'], $response['search_criteria']);
+                $this->assertTrue($response['total_count'] == 1);
+                $this->assertTrue(count($response['items']) == 1);
 
-        $this->assertNotNull($response['items'][0]['id']);
-        $this->assertEquals($this->getFixtureData(), $response['items'][0]);
+                $this->assertNotNull($response['items'][0]['id']);
+                $this->assertEquals($this->getFixtureData(), $response['items'][0]);
+            }
+        }
     }
 
     /**
@@ -160,6 +164,8 @@ class GetListTest extends WebapiAbstract
         $region = $this->regionFactory->create();
         $this->dataObjectHelper->populateWithArray($region, $this->getFixtureData(), RegionInterface::class);
         $this->region = $this->regionRepository->save($region);
+
+        $this->assertInstanceOf(RegionInterface::class, $this->region);
     }
 
     /**

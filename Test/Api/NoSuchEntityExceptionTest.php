@@ -57,11 +57,11 @@ class NoSuchEntityExceptionTest extends WebapiAbstract
                 ? $this->_webApiCall($serviceInfo)
                 : $this->_webApiCall($serviceInfo, ['regionId' => $notExistingId]);
             $this->fail('Expected throwing exception');
+        } catch (\SoapFault $e) {
+            $this->assertSoapException($notExistingId, $e);
         } catch (\Exception $e) {
             if (constant('TESTS_WEB_API_ADAPTER') === self::ADAPTER_REST) {
                 $this->assertRestException($notExistingId, $e);
-            } elseif (constant('TESTS_WEB_API_ADAPTER') === self::ADAPTER_SOAP) {
-                $this->assertSoapException($notExistingId, $e);
             } else {
                 throw $e;
             }

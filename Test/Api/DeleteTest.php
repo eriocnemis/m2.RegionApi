@@ -98,8 +98,8 @@ class DeleteTest extends WebapiAbstract
      */
     protected function tearDown()
     {
-        if ($this->region) {
-            $this->regionRepository->delete($this->region->getId());
+        if (null !== $this->region) {
+            $this->regionRepository->delete((int)$this->region->getId());
             $this->region = null;
         }
     }
@@ -113,16 +113,22 @@ class DeleteTest extends WebapiAbstract
     {
         $this->createTempData();
 
-        $serviceInfo = $this->getServiceInfo($this->region->getId());
-        $requestData = ['regionId' => $this->region->getId()];
+        if (null !== $this->region) {
+            $serviceInfo = $this->getServiceInfo((int)$this->region->getId());
+            $requestData = ['regionId' => $this->region->getId()];
 
-        $response = $this->_webApiCall($serviceInfo, $requestData);
-        $this->assertTrue($response);
+            $result = false;
+            $response = $this->_webApiCall($serviceInfo, $requestData);
+            if (is_bool($response)) {
+                $result = (bool)$response;
+            }
+            $this->assertTrue($result);
 
-        try {
-            $this->regionRepository->get($this->region->getId());
-        } catch (\Exception $e) {
-            $this->region = null;
+            try {
+                $this->regionRepository->get((int)$this->region->getId());
+            } catch (\Exception $e) {
+                $this->region = null;
+            }
         }
     }
 
@@ -157,6 +163,8 @@ class DeleteTest extends WebapiAbstract
         $region = $this->regionFactory->create();
         $this->dataObjectHelper->populateWithArray($region, $this->getFixtureData(), RegionInterface::class);
         $this->region = $this->regionRepository->save($region);
+
+        $this->assertInstanceOf(RegionInterface::class, $this->region);
     }
 
     /**
