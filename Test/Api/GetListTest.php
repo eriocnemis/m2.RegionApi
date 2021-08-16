@@ -118,6 +118,7 @@ class GetListTest extends WebapiAbstract
             $serviceInfo = $this->getServiceInfo($searchCriteria);
 
             $response = $this->_webApiCall($serviceInfo, $searchCriteria);
+
             if (is_array($response)) {
                 $this->assertArrayHasKey('search_criteria', $response);
                 $this->assertArrayHasKey('total_count', $response);
@@ -125,10 +126,12 @@ class GetListTest extends WebapiAbstract
 
                 $this->assertEquals($searchCriteria['searchCriteria'], $response['search_criteria']);
                 $this->assertTrue($response['total_count'] == 1);
-                $this->assertTrue(count($response['items']) == 1);
+                $this->assertCount(1, $response['items']);
 
                 $this->assertNotNull($response['items'][0]['id']);
                 $this->assertEquals($this->getFixtureData(), $response['items'][0]);
+            } else {
+                $this->fail('Wrong response data format');
             }
         }
     }
