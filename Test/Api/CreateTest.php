@@ -17,9 +17,9 @@ use Eriocnemis\RegionApi\Api\Data\RegionInterfaceFactory;
 use Eriocnemis\RegionApi\Api\RegionRepositoryInterface;
 
 /**
- * Update region provider test
+ * Create region provider test
  */
-class UpdateTest extends WebapiAbstract
+class CreateTest extends WebapiAbstract
 {
     /**
      * Resource path of rest api
@@ -84,23 +84,6 @@ class UpdateTest extends WebapiAbstract
     ];
 
     /**
-     * @var mixed[]
-     */
-    private $newData = [
-        'country_id' => 'US',
-        'code' => 'XX',
-        'default_name' => 'New Default Name',
-        'labels' => [
-            [
-                'name' => 'New Name',
-                'locale' => 'en_US'
-            ]
-
-        ],
-        'status' => 0
-    ];
-
-    /**
      * This method is called before a test is executed
      *
      * @return void
@@ -119,6 +102,8 @@ class UpdateTest extends WebapiAbstract
 
     /**
      * This method is called after a test is executed
+     *
+     * @return void
      */
     protected function tearDown()
     {
@@ -138,22 +123,27 @@ class UpdateTest extends WebapiAbstract
         $this->createTempData();
 
         if (null !== $this->region) {
-            $fixtureData = $this->getNewFixtureData() + $this->dataObjectProcessor->buildOutputDataArray(
+            $fixtureData = $this->getFixtureData() + $this->dataObjectProcessor->buildOutputDataArray(
                 $this->region,
                 RegionInterface::class
             );
 
-            $serviceInfo = $this->getServiceInfo((int)$this->region->getId());
-            $requestData = ['region' => $this->getNewFixtureData()];
+            $this->regionRepository->delete((int)$this->region->getId());
+            $this->region = null;
+
+            $serviceInfo = $this->getServiceInfo();
+            $requestData = ['region' => $this->getFixtureData()];
+
+            $response = $this->_webApiCall($serviceInfo, $requestData);
 
             $regionId = null;
-            $response = $this->_webApiCall($serviceInfo, $requestData);
             if (is_array($response) && !empty($response['id'])) {
                 $regionId = $response['id'];
+                $fixtureData['id'] = $regionId;
             }
             $this->assertNotNull($regionId);
 
-            $this->region = $this->regionRepository->get($regionId);
+            $this->region = $this->regionRepository->get((int)$regionId);
             $regionData = $this->dataObjectProcessor->buildOutputDataArray(
                 $this->region,
                 RegionInterface::class
@@ -166,15 +156,14 @@ class UpdateTest extends WebapiAbstract
     /**
      * Retrieve service info
      *
-     * @param int $regionId
      * @return mixed[]
      */
-    private function getServiceInfo($regionId)
+    private function getServiceInfo()
     {
         return [
             'rest' => [
-                'resourcePath' => self::RESOURCE_PATH . '/' . $regionId,
-                'httpMethod' => Request::HTTP_METHOD_PUT
+                'resourcePath' => self::RESOURCE_PATH,
+                'httpMethod' => Request::HTTP_METHOD_POST
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -205,22 +194,6 @@ class UpdateTest extends WebapiAbstract
      */
     private function getFixtureData()
     {
-        if ($this->region) {
-            $this->data['id'] = $this->region->getId();
-        }
         return $this->data;
-    }
-
-    /**
-     * Retrieve new fixture data of the region
-     *
-     * @return mixed[]
-     */
-    private function getNewFixtureData()
-    {
-        if ($this->region) {
-            $this->newData['id'] = $this->region->getId();
-        }
-        return $this->newData;
     }
 }
