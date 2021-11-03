@@ -18,10 +18,10 @@
     },
     "autoload": {
         "files": [
-            "registration.php"
+            "src/registration.php"
         ],
         "psr-4": {
-            "Eriocnemis\\RegionApi\\": ""
+            "Eriocnemis\\RegionApi\\": "src"
         }
     }
 }
