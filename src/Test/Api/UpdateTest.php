@@ -9,6 +9,7 @@ namespace Eriocnemis\RegionApi\Test\Api;
 
 use Magento\Framework\Api\DataObjectHelper;
 use Magento\Framework\Webapi\Rest\Request;
+use Magento\Framework\Reflection\DataObjectProcessor;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\TestCase\WebapiAbstract;
 use Eriocnemis\RegionApi\Api\Data\RegionInterface;
@@ -16,14 +17,14 @@ use Eriocnemis\RegionApi\Api\Data\RegionInterfaceFactory;
 use Eriocnemis\RegionApi\Api\RegionRepositoryInterface;
 
 /**
- * Get region list provider test
+ * Update region provider test
  */
-class GetListTest extends WebapiAbstract
+class UpdateTest extends WebapiAbstract
 {
     /**
      * Resource path of rest api
      */
-    private const RESOURCE_PATH = '/V1/eriocnemis/region/search';
+    private const RESOURCE_PATH = '/V1/eriocnemis/region';
 
     /**
      * Soap service name
@@ -38,7 +39,7 @@ class GetListTest extends WebapiAbstract
     /**
      * Soap service operation
      */
-    private const SERVICE_OPERATION = 'getList';
+    private const SERVICE_OPERATION = 'save';
 
     /**
      * @var RegionInterface|null
@@ -58,7 +59,12 @@ class GetListTest extends WebapiAbstract
     /**
      * @var DataObjectHelper
      */
-    protected $dataObjectHelper;
+    private $dataObjectHelper;
+
+    /**
+     * @var DataObjectProcessor
+     */
+    private $dataObjectProcessor;
 
     /**
      * @var mixed[]
@@ -78,17 +84,35 @@ class GetListTest extends WebapiAbstract
     ];
 
     /**
+     * @var mixed[]
+     */
+    private $newData = [
+        'country_id' => 'US',
+        'code' => 'XX',
+        'default_name' => 'New Default Name',
+        'labels' => [
+            [
+                'name' => 'New Name',
+                'locale' => 'en_US'
+            ]
+
+        ],
+        'status' => 0
+    ];
+
+    /**
      * This method is called before a test is executed
      *
      * @return void
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $objectManager = Bootstrap::getObjectManager();
 
         $this->regionFactory = $objectManager->create(RegionInterfaceFactory::class);
         $this->regionRepository = $objectManager->create(RegionRepositoryInterface::class);
         $this->dataObjectHelper = $objectManager->create(DataObjectHelper::class);
+        $this->dataObjectProcessor = $objectManager->create(DataObjectProcessor::class);
 
         parent::setUp();
     }
@@ -96,7 +120,7 @@ class GetListTest extends WebapiAbstract
     /**
      * This method is called after a test is executed
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         if (null !== $this->region) {
             $this->regionRepository->delete((int)$this->region->getId());
@@ -114,40 +138,43 @@ class GetListTest extends WebapiAbstract
         $this->createTempData();
 
         if (null !== $this->region) {
-            $searchCriteria = $this->getSearchCriteria();
-            $serviceInfo = $this->getServiceInfo($searchCriteria);
+            $fixtureData = $this->getNewFixtureData() + $this->dataObjectProcessor->buildOutputDataArray(
+                $this->region,
+                RegionInterface::class
+            );
 
-            $response = $this->_webApiCall($serviceInfo, $searchCriteria);
+            $serviceInfo = $this->getServiceInfo((int)$this->region->getId());
+            $requestData = ['region' => $this->getNewFixtureData()];
 
-            if (is_array($response)) {
-                $this->assertArrayHasKey('search_criteria', $response);
-                $this->assertArrayHasKey('total_count', $response);
-                $this->assertArrayHasKey('items', $response);
-
-                $this->assertEquals($searchCriteria['searchCriteria'], $response['search_criteria']);
-                $this->assertTrue($response['total_count'] == 1);
-                $this->assertCount(1, $response['items']);
-
-                $this->assertNotNull($response['items'][0]['id']);
-                $this->assertEquals($this->getFixtureData(), $response['items'][0]);
-            } else {
-                $this->fail('Wrong response data format');
+            $regionId = null;
+            $response = $this->_webApiCall($serviceInfo, $requestData);
+            if (is_array($response) && !empty($response['id'])) {
+                $regionId = $response['id'];
             }
+            $this->assertNotNull($regionId);
+
+            $this->region = $this->regionRepository->get($regionId);
+            $regionData = $this->dataObjectProcessor->buildOutputDataArray(
+                $this->region,
+                RegionInterface::class
+            );
+
+            $this->assertEquals($fixtureData, $regionData, 'Region data is invalid.');
         }
     }
 
     /**
      * Retrieve service info
      *
-     * @param mixed[] $searchCriteria
+     * @param int $regionId
      * @return mixed[]
      */
-    private function getServiceInfo($searchCriteria)
+    private function getServiceInfo($regionId)
     {
         return [
             'rest' => [
-                'resourcePath' => self::RESOURCE_PATH . '?' . http_build_query($searchCriteria),
-                'httpMethod' => Request::HTTP_METHOD_GET
+                'resourcePath' => self::RESOURCE_PATH . '/' . $regionId,
+                'httpMethod' => Request::HTTP_METHOD_PUT
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -185,28 +212,15 @@ class GetListTest extends WebapiAbstract
     }
 
     /**
-     * Retrieve search criteria
+     * Retrieve new fixture data of the region
      *
      * @return mixed[]
      */
-    private function getSearchCriteria()
+    private function getNewFixtureData()
     {
-        return [
-            'searchCriteria' => [
-                'filter_groups' => [
-                    [
-                        'filters' => [
-                            [
-                                'field' => 'region_id',
-                                'value' => $this->region ? $this->region->getId() : null,
-                                'condition_type' => 'eq',
-                            ]
-                        ]
-                    ]
-                ],
-                'current_page' => 1,
-                'page_size' => 2,
-            ]
-        ];
+        if ($this->region) {
+            $this->newData['id'] = $this->region->getId();
+        }
+        return $this->newData;
     }
 }

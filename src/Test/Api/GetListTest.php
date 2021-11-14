@@ -9,7 +9,6 @@ namespace Eriocnemis\RegionApi\Test\Api;
 
 use Magento\Framework\Api\DataObjectHelper;
 use Magento\Framework\Webapi\Rest\Request;
-use Magento\Framework\Reflection\DataObjectProcessor;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\TestCase\WebapiAbstract;
 use Eriocnemis\RegionApi\Api\Data\RegionInterface;
@@ -17,14 +16,14 @@ use Eriocnemis\RegionApi\Api\Data\RegionInterfaceFactory;
 use Eriocnemis\RegionApi\Api\RegionRepositoryInterface;
 
 /**
- * Create region provider test
+ * Get region list provider test
  */
-class CreateTest extends WebapiAbstract
+class GetListTest extends WebapiAbstract
 {
     /**
      * Resource path of rest api
      */
-    private const RESOURCE_PATH = '/V1/eriocnemis/region';
+    private const RESOURCE_PATH = '/V1/eriocnemis/region/search';
 
     /**
      * Soap service name
@@ -39,7 +38,7 @@ class CreateTest extends WebapiAbstract
     /**
      * Soap service operation
      */
-    private const SERVICE_OPERATION = 'save';
+    private const SERVICE_OPERATION = 'getList';
 
     /**
      * @var RegionInterface|null
@@ -59,12 +58,7 @@ class CreateTest extends WebapiAbstract
     /**
      * @var DataObjectHelper
      */
-    private $dataObjectHelper;
-
-    /**
-     * @var DataObjectProcessor
-     */
-    private $dataObjectProcessor;
+    protected $dataObjectHelper;
 
     /**
      * @var mixed[]
@@ -88,24 +82,21 @@ class CreateTest extends WebapiAbstract
      *
      * @return void
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $objectManager = Bootstrap::getObjectManager();
 
         $this->regionFactory = $objectManager->create(RegionInterfaceFactory::class);
         $this->regionRepository = $objectManager->create(RegionRepositoryInterface::class);
         $this->dataObjectHelper = $objectManager->create(DataObjectHelper::class);
-        $this->dataObjectProcessor = $objectManager->create(DataObjectProcessor::class);
 
         parent::setUp();
     }
 
     /**
      * This method is called after a test is executed
-     *
-     * @return void
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         if (null !== $this->region) {
             $this->regionRepository->delete((int)$this->region->getId());
@@ -123,47 +114,40 @@ class CreateTest extends WebapiAbstract
         $this->createTempData();
 
         if (null !== $this->region) {
-            $fixtureData = $this->getFixtureData() + $this->dataObjectProcessor->buildOutputDataArray(
-                $this->region,
-                RegionInterface::class
-            );
+            $searchCriteria = $this->getSearchCriteria();
+            $serviceInfo = $this->getServiceInfo($searchCriteria);
 
-            $this->regionRepository->delete((int)$this->region->getId());
-            $this->region = null;
+            $response = $this->_webApiCall($serviceInfo, $searchCriteria);
 
-            $serviceInfo = $this->getServiceInfo();
-            $requestData = ['region' => $this->getFixtureData()];
+            if (is_array($response)) {
+                $this->assertArrayHasKey('search_criteria', $response);
+                $this->assertArrayHasKey('total_count', $response);
+                $this->assertArrayHasKey('items', $response);
 
-            $response = $this->_webApiCall($serviceInfo, $requestData);
+                $this->assertEquals($searchCriteria['searchCriteria'], $response['search_criteria']);
+                $this->assertTrue($response['total_count'] == 1);
+                $this->assertCount(1, $response['items']);
 
-            $regionId = null;
-            if (is_array($response) && !empty($response['id'])) {
-                $regionId = $response['id'];
-                $fixtureData['id'] = $regionId;
+                $this->assertNotNull($response['items'][0]['id']);
+                $this->assertEquals($this->getFixtureData(), $response['items'][0]);
+            } else {
+                $this->fail('Wrong response data format');
             }
-            $this->assertNotNull($regionId);
-
-            $this->region = $this->regionRepository->get((int)$regionId);
-            $regionData = $this->dataObjectProcessor->buildOutputDataArray(
-                $this->region,
-                RegionInterface::class
-            );
-
-            $this->assertEquals($fixtureData, $regionData, 'Region data is invalid.');
         }
     }
 
     /**
      * Retrieve service info
      *
+     * @param mixed[] $searchCriteria
      * @return mixed[]
      */
-    private function getServiceInfo()
+    private function getServiceInfo($searchCriteria)
     {
         return [
             'rest' => [
-                'resourcePath' => self::RESOURCE_PATH,
-                'httpMethod' => Request::HTTP_METHOD_POST
+                'resourcePath' => self::RESOURCE_PATH . '?' . http_build_query($searchCriteria),
+                'httpMethod' => Request::HTTP_METHOD_GET
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -194,6 +178,35 @@ class CreateTest extends WebapiAbstract
      */
     private function getFixtureData()
     {
+        if ($this->region) {
+            $this->data['id'] = $this->region->getId();
+        }
         return $this->data;
+    }
+
+    /**
+     * Retrieve search criteria
+     *
+     * @return mixed[]
+     */
+    private function getSearchCriteria()
+    {
+        return [
+            'searchCriteria' => [
+                'filter_groups' => [
+                    [
+                        'filters' => [
+                            [
+                                'field' => 'region_id',
+                                'value' => $this->region ? $this->region->getId() : null,
+                                'condition_type' => 'eq',
+                            ]
+                        ]
+                    ]
+                ],
+                'current_page' => 1,
+                'page_size' => 2,
+            ]
+        ];
     }
 }

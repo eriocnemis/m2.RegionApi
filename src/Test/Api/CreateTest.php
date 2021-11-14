@@ -8,8 +8,8 @@ declare(strict_types=1);
 namespace Eriocnemis\RegionApi\Test\Api;
 
 use Magento\Framework\Api\DataObjectHelper;
-use Magento\Framework\Reflection\DataObjectProcessor;
 use Magento\Framework\Webapi\Rest\Request;
+use Magento\Framework\Reflection\DataObjectProcessor;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\TestCase\WebapiAbstract;
 use Eriocnemis\RegionApi\Api\Data\RegionInterface;
@@ -17,9 +17,9 @@ use Eriocnemis\RegionApi\Api\Data\RegionInterfaceFactory;
 use Eriocnemis\RegionApi\Api\RegionRepositoryInterface;
 
 /**
- * Get region by id provider test
+ * Create region provider test
  */
-class GetTest extends WebapiAbstract
+class CreateTest extends WebapiAbstract
 {
     /**
      * Resource path of rest api
@@ -39,7 +39,7 @@ class GetTest extends WebapiAbstract
     /**
      * Soap service operation
      */
-    private const SERVICE_OPERATION = 'get';
+    private const SERVICE_OPERATION = 'save';
 
     /**
      * @var RegionInterface|null
@@ -59,7 +59,7 @@ class GetTest extends WebapiAbstract
     /**
      * @var DataObjectHelper
      */
-    protected $dataObjectHelper;
+    private $dataObjectHelper;
 
     /**
      * @var DataObjectProcessor
@@ -88,7 +88,7 @@ class GetTest extends WebapiAbstract
      *
      * @return void
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $objectManager = Bootstrap::getObjectManager();
 
@@ -102,8 +102,10 @@ class GetTest extends WebapiAbstract
 
     /**
      * This method is called after a test is executed
+     *
+     * @return void
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         if (null !== $this->region) {
             $this->regionRepository->delete((int)$this->region->getId());
@@ -121,31 +123,47 @@ class GetTest extends WebapiAbstract
         $this->createTempData();
 
         if (null !== $this->region) {
-            $fixtureData = $this->dataObjectProcessor->buildOutputDataArray(
+            $fixtureData = $this->getFixtureData() + $this->dataObjectProcessor->buildOutputDataArray(
                 $this->region,
                 RegionInterface::class
             );
 
-            $serviceInfo = $this->getServiceInfo((int)$this->region->getId());
-            $requestData = ['regionId' => $this->region->getId()];
+            $this->regionRepository->delete((int)$this->region->getId());
+            $this->region = null;
+
+            $serviceInfo = $this->getServiceInfo();
+            $requestData = ['region' => $this->getFixtureData()];
+
             $response = $this->_webApiCall($serviceInfo, $requestData);
 
-            $this->assertEquals($fixtureData, $response, 'Region data is invalid.');
+            $regionId = null;
+            if (is_array($response) && !empty($response['id'])) {
+                $regionId = $response['id'];
+                $fixtureData['id'] = $regionId;
+            }
+            $this->assertNotNull($regionId);
+
+            $this->region = $this->regionRepository->get((int)$regionId);
+            $regionData = $this->dataObjectProcessor->buildOutputDataArray(
+                $this->region,
+                RegionInterface::class
+            );
+
+            $this->assertEquals($fixtureData, $regionData, 'Region data is invalid.');
         }
     }
 
     /**
      * Retrieve service info
      *
-     * @param int $regionId
      * @return mixed[]
      */
-    private function getServiceInfo($regionId)
+    private function getServiceInfo()
     {
         return [
             'rest' => [
-                'resourcePath' => self::RESOURCE_PATH . '/' . $regionId,
-                'httpMethod' => Request::HTTP_METHOD_GET
+                'resourcePath' => self::RESOURCE_PATH,
+                'httpMethod' => Request::HTTP_METHOD_POST
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -176,9 +194,6 @@ class GetTest extends WebapiAbstract
      */
     private function getFixtureData()
     {
-        if ($this->region) {
-            $this->data['id'] = $this->region->getId();
-        }
         return $this->data;
     }
 }

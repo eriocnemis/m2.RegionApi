@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Eriocnemis\RegionApi\Test\Api;
 
 use Magento\Framework\Api\DataObjectHelper;
+use Magento\Framework\Reflection\DataObjectProcessor;
 use Magento\Framework\Webapi\Rest\Request;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\TestCase\WebapiAbstract;
@@ -16,9 +17,9 @@ use Eriocnemis\RegionApi\Api\Data\RegionInterfaceFactory;
 use Eriocnemis\RegionApi\Api\RegionRepositoryInterface;
 
 /**
- * Delete region provider test
+ * Get region by id provider test
  */
-class DeleteTest extends WebapiAbstract
+class GetTest extends WebapiAbstract
 {
     /**
      * Resource path of rest api
@@ -38,7 +39,7 @@ class DeleteTest extends WebapiAbstract
     /**
      * Soap service operation
      */
-    private const SERVICE_OPERATION = 'delete';
+    private const SERVICE_OPERATION = 'get';
 
     /**
      * @var RegionInterface|null
@@ -59,6 +60,11 @@ class DeleteTest extends WebapiAbstract
      * @var DataObjectHelper
      */
     protected $dataObjectHelper;
+
+    /**
+     * @var DataObjectProcessor
+     */
+    private $dataObjectProcessor;
 
     /**
      * @var mixed[]
@@ -82,13 +88,14 @@ class DeleteTest extends WebapiAbstract
      *
      * @return void
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $objectManager = Bootstrap::getObjectManager();
 
         $this->regionFactory = $objectManager->create(RegionInterfaceFactory::class);
         $this->regionRepository = $objectManager->create(RegionRepositoryInterface::class);
         $this->dataObjectHelper = $objectManager->create(DataObjectHelper::class);
+        $this->dataObjectProcessor = $objectManager->create(DataObjectProcessor::class);
 
         parent::setUp();
     }
@@ -96,7 +103,7 @@ class DeleteTest extends WebapiAbstract
     /**
      * This method is called after a test is executed
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         if (null !== $this->region) {
             $this->regionRepository->delete((int)$this->region->getId());
@@ -114,21 +121,16 @@ class DeleteTest extends WebapiAbstract
         $this->createTempData();
 
         if (null !== $this->region) {
+            $fixtureData = $this->dataObjectProcessor->buildOutputDataArray(
+                $this->region,
+                RegionInterface::class
+            );
+
             $serviceInfo = $this->getServiceInfo((int)$this->region->getId());
             $requestData = ['regionId' => $this->region->getId()];
-
-            $result = false;
             $response = $this->_webApiCall($serviceInfo, $requestData);
-            if (is_bool($response)) {
-                $result = (bool)$response;
-            }
-            $this->assertTrue($result);
 
-            try {
-                $this->regionRepository->get((int)$this->region->getId());
-            } catch (\Exception $e) {
-                $this->region = null;
-            }
+            $this->assertEquals($fixtureData, $response, 'Region data is invalid.');
         }
     }
 
@@ -143,7 +145,7 @@ class DeleteTest extends WebapiAbstract
         return [
             'rest' => [
                 'resourcePath' => self::RESOURCE_PATH . '/' . $regionId,
-                'httpMethod' => Request::HTTP_METHOD_DELETE
+                'httpMethod' => Request::HTTP_METHOD_GET
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
